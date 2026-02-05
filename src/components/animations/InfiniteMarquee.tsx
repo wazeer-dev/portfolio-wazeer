@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, memo } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -13,7 +13,7 @@ interface InfiniteMarqueeProps {
     className?: string;
 }
 
-export default function InfiniteMarquee({ items, direction = "left", speed = 5, className = "" }: InfiniteMarqueeProps) {
+function InfiniteMarquee({ items, direction = "left", speed = 5, className = "" }: InfiniteMarqueeProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const textRef = useRef<HTMLDivElement>(null);
 
@@ -81,3 +81,5 @@ export default function InfiniteMarquee({ items, direction = "left", speed = 5, 
         </div>
     );
 }
+
+export default memo(InfiniteMarquee);

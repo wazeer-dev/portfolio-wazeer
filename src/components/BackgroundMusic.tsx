@@ -9,7 +9,7 @@ export default function BackgroundMusic() {
         // Initialize audio instance
         const audio = new Audio("/bg-music.mp3");
         audio.loop = true;
-        audio.volume = 0.4;
+        audio.volume = 0.02; // Reduced to 2%
         audioRef.current = audio;
 
         // Attempt to play immediately

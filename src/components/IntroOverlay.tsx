@@ -3,6 +3,10 @@
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import gsap from "gsap";
+import dynamic from "next/dynamic";
+import Magnetic from "@/components/animations/Magnetic";
+
+const EarthScene = dynamic(() => import("./EarthScene"), { ssr: false });
 
 interface IntroOverlayProps {
     onEnter: () => void;
@@ -61,9 +65,11 @@ export default function IntroOverlay({ onEnter, isLoading = false }: IntroOverla
     return (
         <div
             ref={containerRef}
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black"
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black overflow-hidden"
         >
-            <div className="flex flex-col items-center">
+            <EarthScene />
+
+            <div className="flex flex-col items-center relative z-10 grid-bg">
                 <h1
                     ref={titleRef}
                     className="text-white text-4xl md:text-6xl font-black tracking-tighter mb-12 text-center mix-blend-difference"
@@ -71,40 +77,33 @@ export default function IntroOverlay({ onEnter, isLoading = false }: IntroOverla
                     WAZEER T
                 </h1>
 
-                {/* Cyber/Terminal Button Design */}
-                <button
-                    ref={buttonRef}
-                    onClick={handleClick}
-                    disabled={isLoading}
-                    className={cn(
-                        "group relative px-8 py-4 bg-transparent overflow-hidden rounded-md transition-all duration-300",
-                        isLoading ? "opacity-50 cursor-wait" : "hover:scale-105 active:scale-95 cursor-pointer"
-                    )}
-                >
-                    {/* Border Gradient/Glow */}
-                    <div className={cn(
-                        "absolute inset-0 border rounded-md transition-colors duration-300",
-                        isLoading ? "border-white/10" : "border-white/20 group-hover:border-orange-500/50"
-                    )} />
+                {/* Magnetic Circular Button */}
+                <Magnetic>
+                    <button
+                        ref={buttonRef}
+                        onClick={handleClick}
+                        disabled={isLoading}
+                        className={cn(
+                            "relative w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center border border-white/20 backdrop-blur-md bg-white/5 transition-all duration-500 overflow-hidden group mix-blend-difference",
+                            isLoading ? "cursor-wait opacity-50" : "cursor-pointer hover:border-orange-500"
+                        )}
+                    >
+                        {/* Hover Fill */}
+                        <div className="absolute inset-0 bg-orange-500 rounded-full translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out z-0" />
 
-                    {/* Fill Effect */}
-                    <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                    {/* Text Content */}
-                    <div className="relative flex items-center space-x-3">
-                        <span className={cn("w-1.5 h-1.5 rounded-full", isLoading ? "bg-gray-500" : "bg-orange-500 animate-pulse")} />
-                        <span className={cn(
-                            "text-sm md:text-base font-mono font-bold tracking-[0.2em] transition-colors duration-300",
-                            isLoading ? "text-gray-500" : "text-white group-hover:text-orange-500"
-                        )}>
-                            {isLoading ? "SYSTEM LOADING..." : "INITIALIZE SYSTEM"}
-                        </span>
-                        <span className={cn("w-1.5 h-1.5 rounded-full", isLoading ? "bg-gray-500" : "bg-orange-500 animate-pulse")} />
-                    </div>
-
-                    {/* Scanline Effect (Optional subtle detail) */}
-                    {!isLoading && <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent -translate-y-full group-hover:animate-scan" />}
-                </button>
+                        {/* Text Content */}
+                        <div className="relative z-10 flex flex-col items-center gap-2">
+                            {isLoading ? (
+                                <span className="text-[10px] uppercase font-bold text-neutral-400 animate-pulse">Loading</span>
+                            ) : (
+                                <>
+                                    <span className="text-sm md:text-base font-bold tracking-widest text-white group-hover:text-black transition-colors duration-300">ENTER</span>
+                                    <span className="w-1 h-1 bg-white rounded-full group-hover:bg-black transition-colors duration-300" />
+                                </>
+                            )}
+                        </div>
+                    </button>
+                </Magnetic>
             </div>
         </div>
     );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 // import Image from "next/image"; // No longer needed for sequence
 import { cn } from "@/lib/utils";
 import gsap from "gsap";
@@ -86,15 +86,26 @@ export default function MasterScrollSequence() {
         });
     };
 
-    // Preload Initial on Mount
+    // Preload Initial on Mount & Scroll Restoration
     useEffect(() => {
-        preloadSequence(0).then(() => {
-            preloadSequence(1);
-        });
+        // Force scroll to top
+        if ("scrollRestoration" in window.history) {
+            window.history.scrollRestoration = "manual";
+        }
+        window.scrollTo(0, 0);
+
+        // Aggressively preload first few sequences to ensure smooth start
+        const loadInitial = async () => {
+            await preloadSequence(0);
+            await preloadSequence(1);
+            preloadSequence(2);
+            preloadSequence(3);
+        };
+        loadInitial();
     }, []);
 
     // Factor to slow down scroll
-    const SCROLL_FACTOR = 3;
+    const SCROLL_FACTOR = 4; // Increased from 3 to 4 for even smoother/slower text playback per frame
 
     // --- Canvas Drawing Logic ---
     const drawFrame = (seqIndex: number, frameIndex: number) => {
@@ -106,9 +117,23 @@ export default function MasterScrollSequence() {
         const cachedImages = imageCache.current.get(config.id);
 
         if (!cachedImages || !cachedImages[frameIndex]) {
-            // Frame not ready? 
-            // We could try to draw cachedImages[frameIndex - 1] if available
-            return;
+            // Fallback: Nearest Neighbor Search
+            // If strictly current frame is missing, look backwards for the closest loaded frame
+            // This prevents "blinking" or "stuck" empty canvas
+            let safeFrameIndex = frameIndex;
+            while (safeFrameIndex >= 0) {
+                if (cachedImages && cachedImages[safeFrameIndex] && cachedImages[safeFrameIndex].complete) {
+                    break;
+                }
+                safeFrameIndex--;
+            }
+
+            if (safeFrameIndex < 0 || !cachedImages || !cachedImages[safeFrameIndex]) {
+                return; // Nothing to draw at all
+            }
+
+            // Use the safe frame found
+            frameIndex = safeFrameIndex;
         }
 
         const img = cachedImages[frameIndex];
@@ -189,6 +214,7 @@ export default function MasterScrollSequence() {
             if (index !== activeSeqIndex) {
                 setActiveSeqIndex(index);
                 preloadSequence(index + 1);
+                preloadSequence(index + 2); // Increased Buffer: Preload next TWO sequences
             }
 
             // 5. Draw
@@ -203,19 +229,7 @@ export default function MasterScrollSequence() {
 
 
     // --- Audio Logic ---
-    useEffect(() => {
-        if (hasEntered) {
-            const bgMusic = new Audio("/bg-music.mp3");
-            bgMusic.loop = true;
-            bgMusic.volume = 0.4; // Start at 40%
-            bgMusic.play().catch((e) => console.error("BG Music failed:", e));
-
-            return () => {
-                bgMusic.pause();
-                bgMusic.src = "";
-            };
-        }
-    }, [hasEntered]);
+    // Removed duplicate audio logic (Handled globally by BackgroundMusic.tsx)
 
     // --- Render ---
 
@@ -246,7 +260,7 @@ export default function MasterScrollSequence() {
                 style={{ height: `${SEQUENCES.length * 100 * SCROLL_FACTOR}vh` }}
             >
                 {/* Sticky Viewport */}
-                <div className="sticky top-0 w-full h-screen overflow-hidden flex flex-col justify-center items-center">
+                <div className="sticky top-0 w-full h-screen overflow-hidden flex flex-col justify-between md:justify-center items-center">
 
                     {/* Canvas Background */}
                     <canvas
@@ -256,32 +270,29 @@ export default function MasterScrollSequence() {
 
                     {/* Text Overlay */}
                     <div
-                        className={`relative z-10 pointer-events-none mix-blend-difference px-4 w-full mx-auto transition-all duration-500 ease-in-out
-                        ${activeSeqIndex === 0
-                                ? "text-center max-w-4xl flex flex-col items-center justify-center"
-                                : "max-w-[90%] md:max-w-7xl flex flex-col md:flex-row md:justify-between md:items-end text-left md:text-right"
-                            }`}>
+                        className={`relative z-10 pointer-events-none mix-blend-difference px-4 w-full h-full mx-auto transition-all duration-500 ease-in-out
+                        max-w-[90%] md:max-w-7xl flex flex-col md:flex-row justify-between md:justify-between items-start md:items-end text-left md:text-right py-24 md:py-0 md:h-auto md:mb-12`}>
 
-                        {/* Label Area */}
-                        <div className={`${activeSeqIndex === 0 ? "w-full" : "md:w-1/2 text-left"}`}>
+                        {/* Label Area (Top on Mobile, Left on Desktop) */}
+                        <div className="w-full md:w-1/2 text-left">
                             <h2 className="text-5xl md:text-8xl font-black text-white/90 tracking-tighter drop-shadow-2xl animate-fade-in-up">
                                 {SEQUENCES[activeSeqIndex].label}
                             </h2>
                         </div>
 
-                        {/* Description Area */}
+                        {/* Description Area (Bottom on Mobile, Right on Desktop) */}
                         {(SEQUENCES[activeSeqIndex].description || SEQUENCES[activeSeqIndex].subtext) && (
-                            <div className={`mt-4 md:mt-0 flex flex-col ${activeSeqIndex === 0 ? "items-center" : "md:w-1/2 items-start md:items-end"}`}>
+                            <div className="flex flex-col w-full md:w-1/2 items-start md:items-end text-right ml-auto">
                                 {/* Dynamic Description */}
                                 {SEQUENCES[activeSeqIndex].description && (
-                                    <p className={`text-xl md:text-3xl text-orange-500 font-bold uppercase tracking-wide animate-fade-in-up delay-100 ${activeSeqIndex === 0 ? "" : "text-right"}`}>
+                                    <p className="text-xl md:text-3xl text-orange-500 font-bold uppercase tracking-wide animate-fade-in-up delay-100 text-left md:text-right">
                                         {SEQUENCES[activeSeqIndex].description}
                                     </p>
                                 )}
 
                                 {/* Dynamic Subtext */}
                                 {SEQUENCES[activeSeqIndex].subtext && (
-                                    <p className={`mt-2 text-lg md:text-xl text-white/80 font-medium animate-fade-in-up delay-200 ${activeSeqIndex === 0 ? "" : "text-right"}`}>
+                                    <p className="mt-2 text-lg md:text-xl text-white/80 font-medium animate-fade-in-up delay-200 text-left md:text-right">
                                         {SEQUENCES[activeSeqIndex].subtext}
                                     </p>
                                 )}
@@ -310,15 +321,15 @@ export default function MasterScrollSequence() {
                 <div className="absolute bottom-0 left-0 right-0 z-20">
                     <div className="bg-black py-8 border-t border-white/10">
                         <InfiniteMarquee
-                            items={[
+                            items={useMemo(() => [
                                 "React", "Next.js", "Three.js", "GSAP", "TypeScript", "Node.js", "Firebase", "TailwindCSS", "Framer Motion",
                                 "React", "Next.js", "Three.js", "GSAP", "TypeScript", "Node.js", "Firebase", "TailwindCSS", "Framer Motion"
                             ].map(skill => (
-                                <span className="text-4xl md:text-6xl font-black text-neutral-700 hover:text-orange-500 transition-colors duration-300 uppercase tracking-tighter">
+                                <span key={skill} className="text-4xl md:text-6xl font-black text-neutral-500 hover:text-orange-500 transition-colors duration-300 uppercase tracking-tighter">
                                     {skill}
                                 </span>
-                            ))}
-                            speed={2}
+                            )), [])}
+                            speed={10}
                         />
                     </div>
                     <Footer />

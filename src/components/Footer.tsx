@@ -1,9 +1,10 @@
 "use client";
 
+import React, { memo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export default function Footer() {
+function Footer() {
     const router = useRouter();
 
     return (
@@ -63,3 +64,5 @@ export default function Footer() {
         </footer>
     );
 }
+
+export default memo(Footer);

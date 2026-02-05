@@ -1,37 +1,37 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { FirstPersonControls } from "three/examples/jsm/controls/FirstPersonControls.js";
 import { ImprovedNoise } from "three/examples/jsm/math/ImprovedNoise.js";
 
-export default function WorkBackground() {
+export default function EarthScene() {
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!containerRef.current) return;
 
-        // --- Demo Vars ---
         const worldWidth = 256, worldDepth = 256;
         const clock = new THREE.Clock();
 
         let camera: THREE.PerspectiveCamera;
         let scene: THREE.Scene;
         let renderer: THREE.WebGLRenderer;
+        let controls: FirstPersonControls;
         let mesh: THREE.Mesh;
         let texture: THREE.CanvasTexture;
-        let animationId: number;
 
-        // Mouse Parallax State
-        const mouse = new THREE.Vector2();
-        const target = new THREE.Vector2();
-        const windowHalfX = window.innerWidth / 2;
-        const windowHalfY = window.innerHeight / 2;
-
-        // --- Generators ---
+        // --- Helpers ---
         function generateHeight(width: number, height: number) {
             let seed = Math.PI / 4;
-            // Local random override if needed, but using standard math mainly
-            // Example logic:
+            // Overwrite Math.random slightly locally if needed, but for React simplified:
+            // We'll just define a local random function to match the example's determinism if possible,
+            // or just use the example's logic.
+            const customRandom = () => {
+                const x = Math.sin(seed++) * 10000;
+                return x - Math.floor(x);
+            };
+
             const size = width * height;
             const data = new Uint8Array(size);
             const perlin = new ImprovedNoise();
@@ -43,14 +43,19 @@ export default function WorkBackground() {
                 for (let i = 0; i < size; i++) {
                     const x = i % width;
                     const y = Math.floor(i / width);
+                    // Use standard Math.random usually, but example used custom seed. 
+                    // Let's use standard perlin logic with the noise instance.
                     data[i] += Math.abs(perlin.noise(x / quality, y / quality, z) * quality * 1.75);
                 }
                 quality *= 5;
             }
+
             return data;
         }
 
         function generateTexture(data: Uint8Array, width: number, height: number) {
+            let context: CanvasRenderingContext2D | null, image, imageData, shade;
+
             const vector3 = new THREE.Vector3(0, 0, 0);
             const sun = new THREE.Vector3(1, 1, 1);
             sun.normalize();
@@ -59,14 +64,14 @@ export default function WorkBackground() {
             canvas.width = width;
             canvas.height = height;
 
-            const context = canvas.getContext('2d');
+            context = canvas.getContext('2d');
             if (!context) return canvas;
 
             context.fillStyle = '#000';
             context.fillRect(0, 0, width, height);
 
-            const image = context.getImageData(0, 0, canvas.width, canvas.height);
-            const imageData = image.data;
+            image = context.getImageData(0, 0, canvas.width, canvas.height);
+            imageData = image.data;
 
             for (let i = 0, j = 0, l = imageData.length; i < l; i += 4, j++) {
                 vector3.x = data[j - 2] - data[j + 2];
@@ -74,7 +79,7 @@ export default function WorkBackground() {
                 vector3.z = data[j - width * 2] - data[j + width * 2];
                 vector3.normalize();
 
-                const shade = vector3.dot(sun);
+                shade = vector3.dot(sun);
 
                 imageData[i] = (96 + shade * 128) * (0.5 + data[j] * 0.007);
                 imageData[i + 1] = (32 + shade * 96) * (0.5 + data[j] * 0.007);
@@ -88,106 +93,86 @@ export default function WorkBackground() {
             canvasScaled.width = width * 4;
             canvasScaled.height = height * 4;
 
-            const contextScaled = canvasScaled.getContext('2d');
-            if (!contextScaled) return canvas;
+            context = canvasScaled.getContext('2d');
+            if (!context) return canvas;
 
-            contextScaled.scale(4, 4);
-            contextScaled.drawImage(canvas, 0, 0);
+            context.scale(4, 4);
+            context.drawImage(canvas, 0, 0);
 
-            const imageScaled = contextScaled.getImageData(0, 0, canvasScaled.width, canvasScaled.height);
-            const imageDataScaled = imageScaled.data;
+            image = context.getImageData(0, 0, canvasScaled.width, canvasScaled.height);
+            imageData = image.data;
 
-            for (let i = 0, l = imageDataScaled.length; i < l; i += 4) {
+            for (let i = 0, l = imageData.length; i < l; i += 4) {
                 const v = Math.floor(Math.random() * 5);
-                imageDataScaled[i] += v;
-                imageDataScaled[i + 1] += v;
-                imageDataScaled[i + 2] += v;
+                imageData[i] += v;
+                imageData[i + 1] += v;
+                imageData[i + 2] += v;
             }
 
-            contextScaled.putImageData(imageScaled, 0, 0);
+            context.putImageData(image, 0, 0);
             return canvasScaled;
         }
 
         // --- Init ---
         const init = () => {
-            // Camera
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 10000);
-            // Initial Position
-            camera.position.set(100, 800, -800);
-            camera.lookAt(-100, 810, -800);
+            if (!containerRef.current) return;
 
-            // Scene
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 10000);
+
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0xefd1b5);
             scene.fog = new THREE.FogExp2(0xefd1b5, 0.0025);
 
-            // Terrain Data
             const data = generateHeight(worldWidth, worldDepth);
 
-            // Geometry
+            camera.position.set(100, 800, -800);
+            camera.lookAt(-100, 810, -800);
+
             const geometry = new THREE.PlaneGeometry(7500, 7500, worldWidth - 1, worldDepth - 1);
             geometry.rotateX(-Math.PI / 2);
 
             const vertices = geometry.attributes.position.array;
+
             for (let i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
-                // @ts-ignore
+                // @ts-ignore - TS doesn't know this is a float32array accessible by index cleanly in loop sometimes without casting
                 vertices[j + 1] = data[i] * 10;
             }
 
-            // Texture
             texture = new THREE.CanvasTexture(generateTexture(data, worldWidth, worldDepth));
             texture.wrapS = THREE.ClampToEdgeWrapping;
             texture.wrapT = THREE.ClampToEdgeWrapping;
             texture.colorSpace = THREE.SRGBColorSpace;
 
-            // Mesh
             mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ map: texture }));
             scene.add(mesh);
 
-            // Renderer
             renderer = new THREE.WebGLRenderer();
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
+            // We'll handle animation loop manually to clean up cleanly
+            containerRef.current.appendChild(renderer.domElement);
 
-            if (containerRef.current) {
-                containerRef.current.innerHTML = "";
-                containerRef.current.appendChild(renderer.domElement);
-            }
-
-            // Stats (Skipped for production unless requested)
+            controls = new FirstPersonControls(camera, renderer.domElement);
+            controls.movementSpeed = 150;
+            controls.lookSpeed = 0.1;
         };
 
         const onWindowResize = () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        };
 
-        const onMouseMove = (event: MouseEvent) => {
-            mouse.x = (event.clientX - windowHalfX) * 0.2; // Scale sensitivity
-            mouse.y = (event.clientY - windowHalfY) * 0.2;
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            controls.handleResize();
         };
 
         init();
         window.addEventListener('resize', onWindowResize);
-        document.addEventListener('mousemove', onMouseMove);
 
         // --- Animation ---
+        let reqId: number;
         const animate = () => {
-            animationId = requestAnimationFrame(animate);
-
-            // Smoothly interpolate target position
-            target.x += (mouse.x - target.x) * 0.05;
-            target.y += (mouse.y - target.y) * 0.05;
-
-            // Apply Parallax to Camera
-            // Base pos: (100, 800, -800)
-            camera.position.x = 100 + target.x;
-            camera.position.y = 800 - target.y * 0.5; // Invert Y for natural feel
-
-            // Keep looking at target
-            camera.lookAt(-100, 810, -800);
-
+            reqId = requestAnimationFrame(animate);
+            controls.update(clock.getDelta());
             renderer.render(scene, camera);
         };
         animate();
@@ -195,23 +180,24 @@ export default function WorkBackground() {
         // --- Cleanup ---
         return () => {
             window.removeEventListener('resize', onWindowResize);
-            document.removeEventListener('mousemove', onMouseMove);
-            cancelAnimationFrame(animationId);
-            renderer.dispose();
+            if (reqId) cancelAnimationFrame(reqId);
+            if (containerRef.current) {
+                containerRef.current.removeChild(renderer.domElement);
+            }
+            // Dispose basic resources
             if (mesh) {
                 mesh.geometry.dispose();
                 (mesh.material as THREE.Material).dispose();
             }
             if (texture) texture.dispose();
+            renderer.dispose();
         };
     }, []);
 
     return (
         <div
             ref={containerRef}
-            className="fixed inset-0 z-0"
-            // Remove pointer-events-auto if we don't need clicks, just hover
-            style={{ pointerEvents: 'none' }}
+            className="absolute inset-0 w-full h-full z-0 block cursor-move"
         />
     );
 }
