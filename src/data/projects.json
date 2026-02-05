@@ -1,0 +1,14 @@
+[
+    {
+        "id": "1",
+        "title": "HIGH LABAN",
+        "image": "/image.png",
+        "link": "https://high-laban-6p9x.vercel.app"
+    },
+    {
+        "id": "2",
+        "title": "TOWN THURUTHI",
+        "image": "/project2.png",
+        "link": "https://town-thuruthi.vercel.app/"
+    }
+]
