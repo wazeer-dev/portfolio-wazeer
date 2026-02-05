@@ -231,102 +231,99 @@ export default function MasterScrollSequence() {
     // --- Text Logic (Reverted to direct Active Sequence) ---
     // We remove the separate textIndex state to prevent sync issues causing invisibility
 
+    // Check if initial sequence is loaded
+    const isInitialSequenceLoaded = !sequencesLoading.current.has(SEQUENCES[0].id) && imageCache.current.has(SEQUENCES[0].id);
+
     return (
         <>
 
-    // Check if initial sequence is loaded
-            const isInitialSequenceLoaded = !sequencesLoading.current.has(SEQUENCES[0].id) && imageCache.current.has(SEQUENCES[0].id);
+            {/* Intro Gate */}
+            {!hasEntered && <IntroOverlay onEnter={() => setHasEntered(true)} isLoading={!isInitialSequenceLoaded} />}
 
-            return (
-            <>
+            <div
+                ref={containerRef}
+                className="relative w-full bg-black leading-none"
+                style={{ height: `${SEQUENCES.length * 100 * SCROLL_FACTOR}vh` }}
+            >
+                {/* Sticky Viewport */}
+                <div className="sticky top-0 w-full h-screen overflow-hidden flex flex-col justify-center items-center">
 
-                {/* Intro Gate */}
-                {!hasEntered && <IntroOverlay onEnter={() => setHasEntered(true)} isLoading={!isInitialSequenceLoaded} />}
+                    {/* Canvas Background */}
+                    <canvas
+                        ref={canvasRef}
+                        className="absolute inset-0 w-full h-full z-0 object-cover"
+                    />
 
-                <div
-                    ref={containerRef}
-                    className="relative w-full bg-black leading-none"
-                    style={{ height: `${SEQUENCES.length * 100 * SCROLL_FACTOR}vh` }}
-                >
-                    {/* Sticky Viewport */}
-                    <div className="sticky top-0 w-full h-screen overflow-hidden flex flex-col justify-center items-center">
-
-                        {/* Canvas Background */}
-                        <canvas
-                            ref={canvasRef}
-                            className="absolute inset-0 w-full h-full z-0 object-cover"
-                        />
-
-                        {/* Text Overlay */}
-                        <div
-                            className={`relative z-10 pointer-events-none mix-blend-difference px-4 w-full mx-auto transition-all duration-500 ease-in-out
+                    {/* Text Overlay */}
+                    <div
+                        className={`relative z-10 pointer-events-none mix-blend-difference px-4 w-full mx-auto transition-all duration-500 ease-in-out
                         ${activeSeqIndex === 0
-                                    ? "text-center max-w-4xl flex flex-col items-center justify-center"
-                                    : "max-w-[90%] md:max-w-7xl flex flex-col md:flex-row md:justify-between md:items-end text-left md:text-right"
-                                }`}>
+                                ? "text-center max-w-4xl flex flex-col items-center justify-center"
+                                : "max-w-[90%] md:max-w-7xl flex flex-col md:flex-row md:justify-between md:items-end text-left md:text-right"
+                            }`}>
 
-                            {/* Label Area */}
-                            <div className={`${activeSeqIndex === 0 ? "w-full" : "md:w-1/2 text-left"}`}>
-                                <h2 className="text-5xl md:text-8xl font-black text-white/90 tracking-tighter drop-shadow-2xl animate-fade-in-up">
-                                    {SEQUENCES[activeSeqIndex].label}
-                                </h2>
-                            </div>
-
-                            {/* Description Area */}
-                            {(SEQUENCES[activeSeqIndex].description || SEQUENCES[activeSeqIndex].subtext) && (
-                                <div className={`mt-4 md:mt-0 flex flex-col ${activeSeqIndex === 0 ? "items-center" : "md:w-1/2 items-start md:items-end"}`}>
-                                    {/* Dynamic Description */}
-                                    {SEQUENCES[activeSeqIndex].description && (
-                                        <p className={`text-xl md:text-3xl text-orange-500 font-bold uppercase tracking-wide animate-fade-in-up delay-100 ${activeSeqIndex === 0 ? "" : "text-right"}`}>
-                                            {SEQUENCES[activeSeqIndex].description}
-                                        </p>
-                                    )}
-
-                                    {/* Dynamic Subtext */}
-                                    {SEQUENCES[activeSeqIndex].subtext && (
-                                        <p className={`mt-2 text-lg md:text-xl text-white/80 font-medium animate-fade-in-up delay-200 ${activeSeqIndex === 0 ? "" : "text-right"}`}>
-                                            {SEQUENCES[activeSeqIndex].subtext}
-                                        </p>
-                                    )}
-
-                                    {/* Dynamic Button (CTA) */}
-                                    {SEQUENCES[activeSeqIndex].buttonText && (
-                                        <div className={`mt-6 pointer-events-auto animate-fade-in-up delay-300`}>
-                                            <button className="px-6 py-2 border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-black transition-all duration-300 font-bold uppercase tracking-widest text-sm">
-                                                {SEQUENCES[activeSeqIndex].buttonText}
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                        {/* Label Area */}
+                        <div className={`${activeSeqIndex === 0 ? "w-full" : "md:w-1/2 text-left"}`}>
+                            <h2 className="text-5xl md:text-8xl font-black text-white/90 tracking-tighter drop-shadow-2xl animate-fade-in-up">
+                                {SEQUENCES[activeSeqIndex].label}
+                            </h2>
                         </div>
 
-                        {/* Loading Indicator (Small, bottom right) - Optional, maybe hide after enter? */}
-                        {loadingStatus && hasEntered && (
-                            <div className="absolute bottom-4 right-4 z-50 bg-black/50 backdrop-blur text-white text-xs px-2 py-1 rounded">
-                                {loadingStatus}
+                        {/* Description Area */}
+                        {(SEQUENCES[activeSeqIndex].description || SEQUENCES[activeSeqIndex].subtext) && (
+                            <div className={`mt-4 md:mt-0 flex flex-col ${activeSeqIndex === 0 ? "items-center" : "md:w-1/2 items-start md:items-end"}`}>
+                                {/* Dynamic Description */}
+                                {SEQUENCES[activeSeqIndex].description && (
+                                    <p className={`text-xl md:text-3xl text-orange-500 font-bold uppercase tracking-wide animate-fade-in-up delay-100 ${activeSeqIndex === 0 ? "" : "text-right"}`}>
+                                        {SEQUENCES[activeSeqIndex].description}
+                                    </p>
+                                )}
+
+                                {/* Dynamic Subtext */}
+                                {SEQUENCES[activeSeqIndex].subtext && (
+                                    <p className={`mt-2 text-lg md:text-xl text-white/80 font-medium animate-fade-in-up delay-200 ${activeSeqIndex === 0 ? "" : "text-right"}`}>
+                                        {SEQUENCES[activeSeqIndex].subtext}
+                                    </p>
+                                )}
+
+                                {/* Dynamic Button (CTA) */}
+                                {SEQUENCES[activeSeqIndex].buttonText && (
+                                    <div className={`mt-6 pointer-events-auto animate-fade-in-up delay-300`}>
+                                        <button className="px-6 py-2 border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-black transition-all duration-300 font-bold uppercase tracking-widest text-sm">
+                                            {SEQUENCES[activeSeqIndex].buttonText}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
 
-                    {/* Footer and Slider - Absolute Bottom */}
-                    <div className="absolute bottom-0 left-0 right-0 z-20">
-                        <div className="bg-black py-8 border-t border-white/10">
-                            <InfiniteMarquee
-                                items={[
-                                    "React", "Next.js", "Three.js", "GSAP", "TypeScript", "Node.js", "Firebase", "TailwindCSS", "Framer Motion",
-                                    "React", "Next.js", "Three.js", "GSAP", "TypeScript", "Node.js", "Firebase", "TailwindCSS", "Framer Motion"
-                                ].map(skill => (
-                                    <span className="text-4xl md:text-6xl font-black text-neutral-700 hover:text-orange-500 transition-colors duration-300 uppercase tracking-tighter">
-                                        {skill}
-                                    </span>
-                                ))}
-                                speed={2}
-                            />
+                    {/* Loading Indicator (Small, bottom right) - Optional, maybe hide after enter? */}
+                    {loadingStatus && hasEntered && (
+                        <div className="absolute bottom-4 right-4 z-50 bg-black/50 backdrop-blur text-white text-xs px-2 py-1 rounded">
+                            {loadingStatus}
                         </div>
-                        <Footer />
-                    </div>
+                    )}
                 </div>
-            </>
-            );
+
+                {/* Footer and Slider - Absolute Bottom */}
+                <div className="absolute bottom-0 left-0 right-0 z-20">
+                    <div className="bg-black py-8 border-t border-white/10">
+                        <InfiniteMarquee
+                            items={[
+                                "React", "Next.js", "Three.js", "GSAP", "TypeScript", "Node.js", "Firebase", "TailwindCSS", "Framer Motion",
+                                "React", "Next.js", "Three.js", "GSAP", "TypeScript", "Node.js", "Firebase", "TailwindCSS", "Framer Motion"
+                            ].map(skill => (
+                                <span className="text-4xl md:text-6xl font-black text-neutral-700 hover:text-orange-500 transition-colors duration-300 uppercase tracking-tighter">
+                                    {skill}
+                                </span>
+                            ))}
+                            speed={2}
+                        />
+                    </div>
+                    <Footer />
+                </div>
+            </div>
+        </>
+    );
 }
