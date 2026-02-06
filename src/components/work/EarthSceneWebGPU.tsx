@@ -95,8 +95,7 @@ export default function EarthSceneWebGPU() {
 
             // atmosphere
             const atmosphereMaterial = new THREE.MeshBasicNodeMaterial({ side: THREE.BackSide, transparent: true });
-            let alpha = fresnel.remap(0.73, 1, 1, 0).pow(3);
-            alpha = alpha.mul(sunOrientation.smoothstep(-0.5, 1));
+            const alpha = fresnel.remap(0.73, 1, 1, 0).pow(3).mul(sunOrientation.smoothstep(-0.5, 1));
             atmosphereMaterial.outputNode = vec4(atmosphereColor, alpha);
 
             const atmosphere = new THREE.Mesh(sphereGeometry, atmosphereMaterial);
