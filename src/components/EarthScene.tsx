@@ -223,6 +223,7 @@ export default function EarthScene() {
 
         const fillPositionTexture = (texture: THREE.DataTexture) => {
             const theArray = texture.image.data;
+            if (!theArray) return;
 
             for (let k = 0, kl = theArray.length; k < kl; k += 4) {
                 const x = Math.random() * BOUNDS - BOUNDS_HALF;
@@ -238,6 +239,7 @@ export default function EarthScene() {
 
         const fillVelocityTexture = (texture: THREE.DataTexture) => {
             const theArray = texture.image.data;
+            if (!theArray) return;
 
             for (let k = 0, kl = theArray.length; k < kl; k += 4) {
                 const x = Math.random() - 0.5;
