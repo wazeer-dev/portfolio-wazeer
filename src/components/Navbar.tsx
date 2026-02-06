@@ -1,126 +1,82 @@
 "use client";
 
-import React, { useState, memo } from "react";
+import React, { memo } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-import Magnetic from "@/components/animations/Magnetic";
-
 function Navbar() {
-    const [isOpen, setIsOpen] = useState(false);
+    const pathname = usePathname();
+    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+    const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
     const navLinks = [
-        { name: "Work", href: "/work" },
-        { name: "About", href: "/about" },
-        { name: "Contact", href: "/contact" },
+        { name: "HOME", href: "/", label: "■ HOME" },
+        { name: "WORK", href: "/work", label: "WORK" },
+        { name: "CONTACT", href: "/contact", label: "CONTACT" },
+        { name: "INFO", href: "/about", label: "INFO" },
     ];
 
     return (
-        <div className="fixed top-6 left-0 right-0 z-50 flex justify-center pointer-events-none">
-            <nav className="pointer-events-auto flex items-center justify-between px-6 py-3 w-[90%] max-w-5xl bg-black/60 backdrop-blur-xl border border-white/10 rounded-[20px] shadow-2xl transition-all duration-300 relative z-50">
+        <>
+            <div className="fixed top-0 left-0 right-0 z-50 px-8 py-8 flex justify-between items-start text-[10px] md:text-xs font-bold tracking-widest text-[#888] mix-blend-difference pointer-events-none select-none">
                 {/* Left: Brand */}
-                <Magnetic>
-                    <Link href="/" className="inline-block text-white font-bold tracking-wider hover:text-orange-500 transition-colors z-50" onClick={() => setIsOpen(false)}>
-                        PORTFOLIO
+                <div className="uppercase pointer-events-auto animate-fade-in-down delay-0">
+                    <Link href="/" className="hover:text-white transition-colors" onClick={() => setIsMenuOpen(false)}>
+                        WAZEER T.
                     </Link>
-                </Magnetic>
-
-                {/* Center: Desktop Links */}
-                <div className="hidden md:flex items-center space-x-6 text-xs sm:text-sm font-medium text-white/80">
-                    {navLinks.map((link) => (
-                        <Magnetic key={link.name}>
-                            <Link
-                                href={link.href}
-                                className="inline-block px-4 py-2 hover:text-orange-500 transition-colors"
-                            >
-                                {link.name}
-                            </Link>
-                        </Magnetic>
-                    ))}
                 </div>
 
-                {/* Right: CTA (Desktop) */}
-                <div className="hidden md:block">
-                    <Magnetic>
-                        <Link
-                            href="/hire"
-                            className="inline-block bg-orange-600 hover:bg-orange-500 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-full transition-all hover:scale-105 active:scale-95"
-                        >
-                            Hire Me
-                        </Link>
-                    </Magnetic>
-                </div>
-
-                {/* Mobile Menu Toggle (Animated Hamburger) */}
-                <button
-                    className="md:hidden relative z-50 w-10 h-10 flex flex-col justify-center items-center gap-1.5 group"
-                    onClick={() => setIsOpen(!isOpen)}
-                >
-                    <span className={cn(
-                        "w-6 h-0.5 bg-white transition-all duration-300 ease-out",
-                        isOpen ? "rotate-45 translate-y-2" : "group-hover:w-8"
-                    )} />
-                    <span className={cn(
-                        "w-6 h-0.5 bg-white transition-all duration-300 ease-out",
-                        isOpen ? "opacity-0" : ""
-                    )} />
-                    <span className={cn(
-                        "w-6 h-0.5 bg-white transition-all duration-300 ease-out",
-                        isOpen ? "-rotate-45 -translate-y-2" : "group-hover:w-4"
-                    )} />
-                </button>
-            </nav>
-
-            {/* Premium Mobile Menu Overlay */}
-            <div className={cn(
-                "fixed inset-0 bg-black z-40 flex flex-col items-center justify-center transition-all duration-500 md:hidden pointer-events-auto",
-                isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none delay-200"
-            )}>
-                {/* Background Grid/Noise */}
-                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 pointer-events-none mix-blend-overlay" />
-
-                <div className="flex flex-col space-y-8 text-center relative z-10">
-                    {navLinks.map((link, index) => (
-                        <div key={link.name} className="overflow-hidden">
+                {/* Center-Right: Navigation (Desktop) */}
+                <div className="absolute left-[60%] flex flex-col space-y-1 text-left hidden md:flex pointer-events-auto animate-fade-in-down delay-100">
+                    {navLinks.map((link) => {
+                        const isActive = pathname === link.href;
+                        return (
                             <Link
+                                key={link.name}
                                 href={link.href}
                                 className={cn(
-                                    "block text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/50 tracking-tighter transition-all duration-500 transform",
-                                    isOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+                                    "transition-colors duration-300",
+                                    isActive ? "text-white" : "hover:text-white"
                                 )}
-                                style={{ transitionDelay: `${index * 100}ms` }}
-                                onClick={() => setIsOpen(false)}
                             >
-                                <span className="text-sm font-mono text-orange-500 block mb-2 tracking-widest opacity-70">0{index + 1}</span>
-                                {link.name}
+                                {link.name === "HOME" ? `■ ${link.name}` : link.name}
                             </Link>
-                        </div>
-                    ))}
-
-                    <div className="overflow-hidden pt-8">
-                        <Link
-                            href="/hire"
-                            className={cn(
-                                "inline-block px-8 py-4 border border-white/20 rounded-full text-xl font-bold text-white hover:bg-white hover:text-black transition-all duration-500 transform",
-                                isOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
-                            )}
-                            style={{ transitionDelay: "400ms" }}
-                            onClick={() => setIsOpen(false)}
-                        >
-                            Start Project
-                        </Link>
-                    </div>
+                        );
+                    })}
                 </div>
 
-                {/* Footer Info */}
-                <div className={cn(
-                    "absolute bottom-10 left-0 right-0 text-center text-white/30 text-xs font-mono transition-opacity duration-500",
-                    isOpen ? "opacity-100 delay-500" : "opacity-0"
-                )}>
-                    &copy; 2026 WAZEER T.
+                {/* Right: Year */}
+                <div className="animate-fade-in-down delay-200">[2026]</div>
+
+                {/* Mobile Menu Toggle */}
+                <div className="md:hidden pointer-events-auto animate-fade-in-down delay-300">
+                    <button onClick={toggleMenu} className="text-white mix-blend-normal hover:text-[#d4af37] transition-colors uppercase font-black tracking-widest text-xs">
+                        {isMenuOpen ? "CLOSE" : "MENU"}
+                    </button>
                 </div>
             </div>
-        </div>
+
+            {/* Mobile Menu Overlay */}
+            <div className={cn(
+                "fixed inset-0 z-40 bg-black flex flex-col items-center justify-center transition-all duration-500 ease-in-out md:hidden",
+                isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            )}>
+                <div className="flex flex-col space-y-8 text-center">
+                    {navLinks.map((link) => (
+                        <Link
+                            key={link.name}
+                            href={link.href}
+                            onClick={() => setIsMenuOpen(false)}
+                            className="text-4xl font-black text-white hover:text-[#d4af37] transition-colors tracking-tighter"
+                        >
+                            {link.name}
+                        </Link>
+                    ))}
+                </div>
+            </div>
+        </>
     );
 }
 

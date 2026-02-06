@@ -42,7 +42,7 @@ export default async function WorkPage() {
                             href={project.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group relative aspect-video bg-neutral-900 rounded-xl overflow-hidden border border-white/10 hover:border-orange-500/50 transition-colors block"
+                            className="group relative aspect-video bg-neutral-900 rounded-xl overflow-hidden border border-white/10 hover:border-orange-500/50 transition-all duration-500 block hover:z-[50] hover:scale-105"
                         >
                             {/* Background Image */}
                             {(project.image && (project.image.startsWith("http") || project.image.startsWith("/"))) ? (

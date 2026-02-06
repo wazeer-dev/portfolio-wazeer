@@ -6,17 +6,18 @@ import { cn } from "@/lib/utils";
 import gsap from "gsap";
 import { SEQUENCES, SequenceConfig } from "@/lib/sequences";
 import Footer from "@/components/Footer";
-import IntroOverlay from "@/components/IntroOverlay";
+
 import InfiniteMarquee from "@/components/animations/InfiniteMarquee";
 
 // Helper to generate URL
 const getFrameUrl = (i: number, config: SequenceConfig) => {
-    return `${config.folder}/frame_${String(i).padStart(config.padding, "0")}${config.suffix}.webp`;
+    const frameNumber = i + (config.startFrame || 0);
+    return `${config.folder}/frame_${String(frameNumber).padStart(config.padding, "0")}${config.suffix}.webp`;
 };
 
 export default function MasterScrollSequence() {
     // State
-    const [hasEntered, setHasEntered] = useState(false);
+
     const [activeSeqIndex, setActiveSeqIndex] = useState(0);
     // const [activeFrameIndex, setActiveFrameIndex] = useState(0); // Managed by ref loop mostly now
 
@@ -234,13 +235,7 @@ export default function MasterScrollSequence() {
     // --- Render ---
 
     // Lock body scroll if not entered
-    useEffect(() => {
-        if (!hasEntered) {
-            document.body.style.overflow = "hidden";
-        } else {
-            document.body.style.overflow = "unset";
-        }
-    }, [hasEntered]);
+
 
     // --- Text Logic (Reverted to direct Active Sequence) ---
     // We remove the separate textIndex state to prevent sync issues causing invisibility
@@ -248,11 +243,16 @@ export default function MasterScrollSequence() {
     // Check if initial sequence is loaded
     const isInitialSequenceLoaded = !sequencesLoading.current.has(SEQUENCES[0].id) && imageCache.current.has(SEQUENCES[0].id);
 
+    // --- Parallax Logic Moved/Removed per user request for "Old Text" ---
+    // Keeping refs null for now or could remove them, but simplified:
+    const headerRef = useRef<HTMLDivElement>(null);
+    const subtextRef = useRef<HTMLDivElement>(null);
+
     return (
         <>
 
             {/* Intro Gate */}
-            {!hasEntered && <IntroOverlay onEnter={() => setHasEntered(true)} isLoading={!isInitialSequenceLoaded} />}
+
 
             <div
                 ref={containerRef}
@@ -271,7 +271,7 @@ export default function MasterScrollSequence() {
                     {/* Text Overlay */}
                     <div
                         className={`relative z-10 pointer-events-none mix-blend-difference px-4 w-full h-full mx-auto transition-all duration-500 ease-in-out
-                        max-w-[90%] md:max-w-7xl flex flex-col md:flex-row justify-between md:justify-between items-start md:items-end text-left md:text-right py-24 md:py-0 md:h-auto md:mb-12`}>
+                        max-w-[90%] md:max-w-7xl flex flex-col md:flex-row justify-between md:justify-between items-start md:items-end text-left md:text-right py-32 md:py-0 md:h-auto md:mb-24`}>
 
                         {/* Label Area (Top on Mobile, Left on Desktop) */}
                         <div className="w-full md:w-1/2 text-left">
@@ -310,7 +310,7 @@ export default function MasterScrollSequence() {
                     </div>
 
                     {/* Loading Indicator (Small, bottom right) - Optional, maybe hide after enter? */}
-                    {loadingStatus && hasEntered && (
+                    {loadingStatus && (
                         <div className="absolute bottom-4 right-4 z-50 bg-black/50 backdrop-blur text-white text-xs px-2 py-1 rounded">
                             {loadingStatus}
                         </div>

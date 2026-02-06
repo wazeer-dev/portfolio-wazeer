@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import AdminSidebar from "@/components/admin/AdminSidebar";
+import DashboardStats from "@/components/admin/DashboardStats";
+import ImageUploader from "@/components/admin/ImageUploader";
 
 export default function AdminPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -12,14 +15,11 @@ export default function AdminPage() {
     const [formData, setFormData] = useState({ title: "", image: "", link: "" });
     const [loading, setLoading] = useState(false);
 
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [uploading, setUploading] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
 
     // Check auth
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
-        // Simple mock password
         if (password === "admin123") {
             setIsAuthenticated(true);
             fetchProjects();
@@ -32,52 +32,18 @@ export default function AdminPage() {
         try {
             const res = await fetch("/api/projects");
             const data = await res.json();
-            // Check if data is array and doesn't contain error
             if (Array.isArray(data)) {
                 setProjects(data);
             } else {
-                console.warn("API returned non-array:", data);
                 setProjects([]);
             }
         } catch (e) {
-            console.error("Failed to fetch projects:", e);
             setProjects([]);
-        }
-    };
-
-    const handleImageUpload = async (file: File): Promise<string | null> => {
-        const formData = new FormData();
-        formData.append("image", file);
-
-        // Debugging: Hardcoded key to ensure it works. 
-        // TODO: Revert to process.env after confirmation.
-        const API_KEY = "2d78cb0a82dc30eedac7158c574fdafb";
-
-        console.log("Uploading with Key:", API_KEY ? "Present" : "Missing");
-
-        try {
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
-                method: "POST",
-                body: formData,
-            });
-            const data = await res.json();
-            if (data.success) {
-                return data.data.url;
-            } else {
-                console.error("ImgBB Error:", data);
-                if (data.error) alert(`Upload Error: ${data.error.message}`);
-                return null;
-            }
-        } catch (e) {
-            console.error("Upload network failed", e);
-            alert("Upload failed due to network error.");
-            return null;
         }
     };
 
     const resetForm = () => {
         setFormData({ title: "", image: "", link: "" });
-        setImageFile(null);
         setEditingId(null);
     };
 
@@ -93,7 +59,6 @@ export default function AdminPage() {
 
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this project?")) return;
-
         try {
             await fetch(`/api/projects/${id}`, { method: "DELETE" });
             fetchProjects();
@@ -107,22 +72,8 @@ export default function AdminPage() {
         setLoading(true);
 
         try {
-            let imageUrl = formData.image;
-
-            // Handle File Upload if selected
-            if (imageFile) {
-                setUploading(true);
-                const uploadedUrl = await handleImageUpload(imageFile);
-                if (uploadedUrl) {
-                    imageUrl = uploadedUrl;
-                } else {
-                    alert("Image upload failed");
-                    setLoading(false);
-                    setUploading(false);
-                    return;
-                }
-                setUploading(false);
-            }
+            const imageUrl = formData.image;
+            // Legacy upload logic removed - ImageUploader handles this now.
 
             const payload = { ...formData, image: imageUrl };
 
@@ -177,113 +128,149 @@ export default function AdminPage() {
     }
 
     return (
-        <main className="min-h-screen bg-black text-white p-6 md:p-12">
-            <div className="max-w-4xl mx-auto space-y-12">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-                    <button onClick={() => setIsAuthenticated(false)} className="text-red-500 hover:text-red-400">Logout</button>
-                </div>
+        <main className="min-h-screen bg-black text-white flex">
+            {/* Sidebar */}
+            <AdminSidebar onLogout={() => setIsAuthenticated(false)} />
 
-                {/* Add/Edit Form */}
-                <section className="bg-neutral-900 border border-white/10 p-6 rounded-xl space-y-6">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-semibold text-orange-500">{editingId ? "Edit Work" : "Add New Work"}</h2>
-                        {editingId && (
-                            <button onClick={resetForm} className="text-xs text-gray-500 hover:text-white">Cancel Edit</button>
-                        )}
+            {/* Main Content */}
+            <div className="flex-1 md:ml-64 p-6 md:p-12 transition-all duration-300">
+                <div className="max-w-6xl mx-auto space-y-8">
+
+                    {/* Header */}
+                    <div className="flex justify-between items-center border-b border-white/10 pb-6">
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight">Project Management</h1>
+                            <p className="text-gray-400 text-sm mt-1">Manage your portfolio works and content.</p>
+                        </div>
+                        {/* Mobile Logout (Sidebar hides on mobile realistically, but for now simple) */}
+                        <button onClick={() => setIsAuthenticated(false)} className="md:hidden text-red-500 text-sm">Logout</button>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-xs uppercase text-gray-400 mb-1">Project Title</label>
-                            <input
-                                type="text"
-                                required
-                                value={formData.title}
-                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                className="w-full bg-black border border-white/20 p-3 rounded text-white focus:border-orange-500 outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs uppercase text-gray-400 mb-1">Project Image</label>
-                            <div className="space-y-2">
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
-                                    className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-neutral-800 file:text-orange-500 hover:file:bg-neutral-700 transition"
-                                />
-                                {formData.image && !imageFile && (
-                                    <p className="text-xs text-green-500">Current Image: <a href={formData.image} target="_blank" className="underline">View</a></p>
+                    {/* Stats */}
+                    <DashboardStats projects={projects} />
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Add/Edit Form - Sticky or Side */}
+                        <section className="lg:col-span-1 bg-neutral-900 border border-white/10 p-6 rounded-xl space-y-6 h-fit sticky top-6">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-xl font-semibold text-orange-500">{editingId ? "Edit Work" : "Add New Work"}</h2>
+                                {editingId && (
+                                    <button onClick={resetForm} className="text-xs text-gray-500 hover:text-white">Cancel Edit</button>
                                 )}
                             </div>
-                        </div>
-                        <div>
-                            <label className="block text-xs uppercase text-gray-400 mb-1">Project Link</label>
-                            <input
-                                type="url"
-                                required
-                                placeholder="https://..."
-                                value={formData.link}
-                                onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                                className="w-full bg-black border border-white/20 p-3 rounded text-white focus:border-orange-500 outline-none"
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className={`w-full font-bold px-6 py-3 rounded transition-colors disabled:opacity-50 ${editingId ? 'bg-orange-600 text-white hover:bg-orange-500' : 'bg-white text-black hover:bg-gray-200'}`}
-                        >
-                            {loading ? "Processing..." : (editingId ? "Update Project" : "Add Project")}
-                        </button>
-                    </form>
-                </section>
 
-                {/* Existing List */}
-                <section className="space-y-4">
-                    <h2 className="text-xl font-semibold text-white">Existing Projects</h2>
-                    <div className="grid gap-4">
-                        {projects.map((p) => (
-                            <div key={p.id} className="flex items-center justify-between bg-neutral-900/50 p-4 rounded border border-white/5 group hover:border-white/20 transition-colors">
-                                <div className="flex items-center space-x-4">
-                                    <div className="w-16 h-10 bg-gray-800 rounded overflow-hidden relative">
-                                        {p.image ? (
-                                            <img src={p.image} className="object-cover w-full h-full" alt="" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-500 bg-neutral-800">No Img</div>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center space-x-2">
-                                            <p className="font-bold">{p.title}</p>
-                                            {p.category && (
-                                                <span className="text-[10px] bg-neutral-800 border border-white/10 px-2 py-0.5 rounded text-gray-400 uppercase tracking-wider">{p.category}</span>
-                                            )}
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div>
+                                    <label className="block text-xs uppercase text-gray-400 mb-1">Project Title</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                        className="w-full bg-black border border-white/20 p-3 rounded text-white focus:border-orange-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs uppercase text-gray-400 mb-1">Project Image</label>
+                                    <div className="space-y-4">
+                                        {/* Image Uploader Component */}
+                                        <ImageUploader
+                                            onUploadComplete={(url) => {
+                                                setFormData(prev => ({ ...prev, image: url }));
+                                            }}
+                                        />
+
+                                        {/* Preview / Manual Input Fallback */}
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Or paste image URL..."
+                                                value={formData.image}
+                                                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                                                className="flex-1 bg-black border border-white/20 p-2 rounded text-xs text-white focus:border-orange-500 outline-none"
+                                            />
                                         </div>
-                                        {p.description && (
-                                            <p className="text-xs text-gray-500 line-clamp-1 max-w-md">{p.description}</p>
+
+                                        {formData.image && (
+                                            <div className="relative w-full h-32 bg-neutral-800 rounded-lg overflow-hidden border border-white/10 group">
+                                                <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <a href={formData.image} target="_blank" className="text-xs text-white underline">View Full</a>
+                                                </div>
+                                            </div>
                                         )}
-                                        <a href={p.link} target="_blank" className="text-xs text-blue-400 hover:underline">{p.link}</a>
                                     </div>
                                 </div>
-                                <div className="flex space-x-2">
-                                    <button
-                                        onClick={() => handleEdit(p)}
-                                        className="text-xs bg-gray-800 hover:bg-gray-700 text-white px-3 py-1 rounded"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(p.id)}
-                                        className="text-xs bg-red-900/30 hover:bg-red-900/50 text-red-500 px-3 py-1 rounded"
-                                    >
-                                        Delete
-                                    </button>
+                                <div>
+                                    <label className="block text-xs uppercase text-gray-400 mb-1">Project Link</label>
+                                    <input
+                                        type="url"
+                                        required
+                                        placeholder="https://..."
+                                        value={formData.link}
+                                        onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                                        className="w-full bg-black border border-white/20 p-3 rounded text-white focus:border-orange-500 outline-none"
+                                    />
                                 </div>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className={`w-full font-bold px-6 py-3 rounded transition-colors disabled:opacity-50 ${editingId ? 'bg-orange-600 text-white hover:bg-orange-500' : 'bg-white text-black hover:bg-gray-200'}`}
+                                >
+                                    {loading ? "Processing..." : (editingId ? "Update Project" : "Add Project")}
+                                </button>
+                            </form>
+                        </section>
+
+                        {/* Existing List */}
+                        <section className="lg:col-span-2 space-y-4">
+                            <h2 className="text-xl font-semibold text-white">Existing Projects ({projects.length})</h2>
+                            <div className="space-y-3">
+                                {projects.map((p) => (
+                                    <div key={p.id} className="flex items-center justify-between bg-neutral-900/50 p-4 rounded-xl border border-white/5 group hover:border-white/20 transition-all hover:bg-neutral-900">
+                                        <div className="flex items-center space-x-4">
+                                            <div className="w-20 h-14 bg-gray-800 rounded-lg overflow-hidden relative border border-white/5">
+                                                {p.image ? (
+                                                    <img src={p.image} className="object-cover w-full h-full" alt="" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-500 bg-neutral-800">No Img</div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center space-x-2">
+                                                    <p className="font-bold text-white group-hover:text-orange-500 transition-colors">{p.title}</p>
+                                                    {p.category && (
+                                                        <span className="text-[10px] bg-neutral-800 border border-white/10 px-2 py-0.5 rounded text-gray-400 uppercase tracking-wider">{p.category}</span>
+                                                    )}
+                                                </div>
+                                                <a href={p.link} target="_blank" className="text-xs text-gray-500 hover:text-white transition-colors">{p.link}</a>
+                                            </div>
+                                        </div>
+                                        <div className="flex space-x-2">
+                                            <button
+                                                onClick={() => handleEdit(p)}
+                                                className="text-xs bg-gray-800 hover:bg-white hover:text-black text-gray-300 px-3 py-2 rounded transition-all"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(p.id)}
+                                                className="text-xs bg-red-900/20 hover:bg-red-500 text-red-500 hover:text-white px-3 py-2 rounded transition-all"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {projects.length === 0 && (
+                                    <div className="text-center py-12 text-gray-500 border border-dashed border-white/10 rounded-xl">
+                                        No projects found. Add one to get started.
+                                    </div>
+                                )}
                             </div>
-                        ))}
+                        </section>
                     </div>
-                </section>
+                </div>
             </div>
         </main>
     );

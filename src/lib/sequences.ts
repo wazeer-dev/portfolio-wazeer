@@ -2,6 +2,7 @@ export interface SequenceConfig {
     id: string;
     folder: string;
     totalFrames: number;
+    startFrame?: number; // Optional starting frame number (e.g. if files 0-75 are deleted)
     suffix: string; // e.g. "_delay-0.037s"
     padding: number; // e.g. 3 or 4
     label: string; // Text to display for this section
@@ -15,7 +16,8 @@ export const SEQUENCES: SequenceConfig[] = [
     {
         id: "web1",
         folder: "https://pwhyyqvqxmjkbwqlcipn.supabase.co/storage/v1/object/public/web%201",
-        totalFrames: 273,
+        totalFrames: 197, // 273 - 76 = 197 (Frames 76 to 272)
+        startFrame: 76,
         suffix: "_delay-0.037s",
         padding: 3,
         label: "Wazeer T",

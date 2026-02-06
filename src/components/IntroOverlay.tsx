@@ -3,10 +3,11 @@
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import gsap from "gsap";
-import dynamic from "next/dynamic";
+
+import StarBackground from "@/components/ui/StarBackground";
 import Magnetic from "@/components/animations/Magnetic";
 
-const EarthScene = dynamic(() => import("./EarthScene"), { ssr: false });
+
 
 interface IntroOverlayProps {
     onEnter: () => void;
@@ -67,8 +68,9 @@ export default function IntroOverlay({ onEnter, isLoading = false }: IntroOverla
             ref={containerRef}
             className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black overflow-hidden"
         >
-            <EarthScene />
 
+
+            <StarBackground />
             <div className="flex flex-col items-center relative z-10 grid-bg">
                 <h1
                     ref={titleRef}

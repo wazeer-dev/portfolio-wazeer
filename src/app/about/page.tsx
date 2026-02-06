@@ -1,113 +1,106 @@
 "use client";
 
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import TextReveal from "@/components/animations/TextReveal";
-import StaggerReveal from "@/components/animations/StaggerReveal";
 
 export default function AboutPage() {
     return (
-        <main className="min-h-screen bg-black text-white selection:bg-orange-500 selection:text-white pb-20 overflow-hidden">
+        <main className="min-h-screen w-full relative selection:bg-orange-500 selection:text-white font-sans">
             <Navbar />
 
-            {/* Hero Section */}
-            <div className="pt-32 px-6 max-w-7xl mx-auto flex flex-col md:flex-row gap-12 items-center">
+            {/* Global Fixed Background Image for the Entire Page */}
+            <div className="absolute inset-0 z-0">
+                <img
+                    src="/IMG_7218 (1).jpg"
+                    alt="Profile Background"
+                    className="w-full h-full object-cover opacity-50 grayscale contrast-125 block"
+                />
+                {/* Grain/Noise Overlay */}
+                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-30 mix-blend-overlay pointer-events-none" />
+                <div className="absolute inset-0 bg-black/20" />
+            </div>
 
-                {/* Text Content */}
-                <div className="md:w-1/2 z-10">
+            {/* Header handled globally by Navbar now */}
+
+            {/* Section 1: IN FO Hero (Scrollable) */}
+            <section className="relative h-screen w-full overflow-hidden z-10 pointer-events-none">
+                {/* Content Layer */}
+                <div className="relative w-full h-full flex justify-between items-center px-2 md:px-12 pointer-events-auto">
+
+                    {/* Left Text: IN */}
+                    <div className="flex-1 text-left pl-4 md:pl-12">
+                        <TextReveal className="p-2">
+                            <h1 className="text-[20vw] font-black text-[#e0e0e0] leading-none tracking-tighter select-none mix-blend-overlay whitespace-nowrap">
+                                IN
+                            </h1>
+                        </TextReveal>
+                    </div>
+
+                    {/* Center: Chinese Text & Detail */}
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center z-20">
+                        <div className="relative flex flex-col items-center space-y-2">
+                            {/* ... (Brackets remain same) ... */}
+                            {/* Use reduced size if needed, but keeping center iconic for now. Let's just wrap the whole thing if requested, but "IN FO" was the main oversized element. */}
+                            <div className="absolute -top-6 -left-4 w-8 h-8 border-t-2 border-l-2 border-[#d4af37]" />
+                            <div className="absolute -top-6 -right-4 w-8 h-8 border-t-2 border-r-2 border-[#d4af37]" />
+
+                            <span className="text-[#d4af37] font-serif text-4xl md:text-8xl font-bold font-black drop-shadow-2xl opacity-90" style={{ writingMode: 'vertical-rl', textOrientation: 'upright' }}>
+                                簡
+                            </span>
+                            <span className="text-orange-500/80 font-serif text-4xl md:text-8xl font-bold font-black drop-shadow-2xl opacity-90" style={{ writingMode: 'vertical-rl', textOrientation: 'upright' }}>
+                                介
+                            </span>
+
+                            <div className="absolute -bottom-6 -left-4 w-8 h-8 border-b-2 border-l-2 border-[#d4af37]" />
+                            <div className="absolute -bottom-6 -right-4 w-8 h-8 border-b-2 border-r-2 border-[#d4af37]" />
+                        </div>
+                    </div>
+
+                    {/* Right Text: FO */}
+                    <div className="flex-1 text-right pr-4 md:pr-12">
+                        <TextReveal delay={0.2} className="p-2">
+                            <h1 className="text-[20vw] font-black text-[#e0e0e0] leading-none tracking-tighter select-none mix-blend-overlay whitespace-nowrap">
+                                FO
+                            </h1>
+                        </TextReveal>
+                    </div>
+                </div>
+
+                {/* Scroll Indicator */}
+                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 text-white/50 text-xs tracking-widest animate-bounce pointer-events-auto z-50 mix-blend-difference">
+                    SCROLL
+                </div>
+            </section>
+
+            {/* Section 2: Bio / Text (Scroll Content) */}
+            {/* Added extra margin top to push it well below the fold initially, and transparent background to show image */}
+            <section className="relative z-10 w-full min-h-screen py-32 flex flex-col items-center justify-center text-center px-4 overflow-hidden mt-0 bg-black/40 backdrop-blur-sm">
+
+                <div className="relative z-10 max-w-7xl mx-auto space-y-6">
                     <TextReveal>
-                        <h1 className="text-6xl md:text-9xl font-black tracking-tighter mb-8 uppercase leading-[0.8]">
-                            About <br /><span className="text-orange-500">Wazeer</span>
-                        </h1>
+                        <h2 className="text-3xl md:text-7xl lg:text-8xl font-black text-[#e0e0e0] leading-none tracking-tighter uppercase drop-shadow-2xl font-sans">
+                            A <span className="text-[#d4af37] inline-block hover:scale-105 transition-transform duration-500 cursor-default">[CREATIVE]</span> PERSPECTIVE SHAPED <br />
+                            BY <span className="font-serif italic text-[#d4af37] px-2 font-light tracking-normal hover:tracking-widest transition-all duration-700 cursor-default" style={{ fontFamily: 'var(--font-playfair)' }}>Kasaragod</span> ROOTS AND <br />
+                            AN <span className="font-serif italic text-[#d4af37] px-2 font-light tracking-normal hover:tracking-widest transition-all duration-700 cursor-default" style={{ fontFamily: 'var(--font-playfair)' }}>Antigravity</span> VISION
+                        </h2>
                     </TextReveal>
 
-                    <StaggerReveal delay={0.2}>
-                        <div className="space-y-6">
-                            <p className="text-xl md:text-2xl text-neutral-300 font-light leading-relaxed">
-                                I am a creative technologist based in <span className="text-white font-bold border-b border-orange-500">Kasaragod</span>, obsessed with the sweet spot between performance and beauty.
-                            </p>
-                            <p className="text-neutral-400 leading-relaxed max-w-lg">
-                                My philosophy is simple: <span className="text-white italic">"If it's not fluid, it's broken."</span> I build digital experiences that respect the user's time and delight their senses. From complex backend architectures to pixel-perfect frontend animations, I handle the full spectrum of development.
-                            </p>
-                        </div>
-                    </StaggerReveal>
-
-                    {/* Stats / Details */}
-                    <StaggerReveal delay={0.4}>
-                        <div className="grid grid-cols-2 gap-8 mt-12">
-                            <div>
-                                <span className="block text-4xl font-bold text-white">2+</span>
-                                <span className="text-sm text-neutral-500 uppercase tracking-widest">Years Experience</span>
-                            </div>
-                            <div>
-                                <span className="block text-4xl font-bold text-white">100%</span>
-                                <span className="text-sm text-neutral-500 uppercase tracking-widest">Client Satisfaction</span>
-                            </div>
-                        </div>
-                    </StaggerReveal>
-                </div>
-
-                {/* Abstract Visual / Custom Card */}
-                <div className="md:w-1/2 relative h-[500px] w-full animate-fade-in-up delay-300">
-                    <div className="absolute inset-0 bg-gradient-to-tr from-orange-500/10 to-purple-500/10 rounded-full blur-[100px] animate-pulse" />
-
-                    <div className="relative z-10 w-full h-full border border-white/10 rounded-2xl overflow-hidden group hover:border-orange-500/30 transition-colors">
-                        {/* Background Image */}
-                        <div className="absolute inset-0 z-0">
-                            {/* Note: User provided image path */}
-                            <img
-                                src="/Whisk_99324cb0f1394b6a7ee4a5e88aa9e827dr (1).jpg"
-                                alt="Creative Stack"
-                                className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-                        </div>
-
-                        {/* Content */}
-                        <div className="relative z-10 h-full p-8 flex flex-col justify-between">
-                            <div className="text-8xl animate-float"></div>
-                            <div>
-                                <h3 className="text-2xl font-bold text-white mb-4">The Stack</h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {[
-                                        "React", "Next.js", "JS", "Firebase", "GitHub", // Core
-                                        "HTML/CSS", "Bootstrap", // Basics
-                                        "CapCut", "Alight Motion", "Lightroom", // Visual
-                                        "Antigravity UI", "Modeling" // Specialty
-                                    ].map((tech) => (
-                                        <span key={tech} className="px-3 py-1 text-xs border border-white/20 bg-white/5 backdrop-blur-md rounded-full text-white/80 group-hover:text-white group-hover:border-white/40 transition-colors">
-                                            {tech}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Philosophy / Skills Strip */}
-            <div className="mt-32 border-y border-white/5 py-12 bg-neutral-900/30">
-                <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12">
-                    <div className="space-y-4">
-                        <h4 className="text-orange-500 font-mono text-sm uppercase tracking-widest">01. Design</h4>
-                        <p className="text-neutral-400 text-sm leading-relaxed">
-                            Every pixel serves a purpose. I design interfaces that are intuitive, accessible, and visually striking.
+                    <div className="overflow-hidden mt-0 md:mt-2">
+                        <p className="text-sm md:text-lg font-mono text-[#ccc] max-w-2xl mx-auto leading-relaxed drop-shadow-md mix-blend-screen opacity-80 hover:opacity-100 transition-opacity duration-500">
+                            A design approach led by curiosity, emotion, and empathy. <br />
+                            All digital experiences created are crafted to be intuitive, <br />
+                            fluid, and memorably stylistic.
                         </p>
                     </div>
-                    <div className="space-y-4">
-                        <h4 className="text-orange-500 font-mono text-sm uppercase tracking-widest">02. Development</h4>
-                        <p className="text-neutral-400 text-sm leading-relaxed">
-                            Clean, scalable code. I prioritize performance, SEO, and maintainability in every codebase.
-                        </p>
-                    </div>
-                    <div className="space-y-4">
-                        <h4 className="text-orange-500 font-mono text-sm uppercase tracking-widest">03. Deployment</h4>
-                        <p className="text-neutral-400 text-sm leading-relaxed">
-                            CI/CD pipelines, cloud infrastructure, and robust testing ensure your project launches without a hitch.
-                        </p>
+
+                    <div className="pt-8 animate-fade-in-up delay-300">
+                        <button className="px-8 py-3 bg-[#d4af37] text-black font-black uppercase tracking-widest text-sm hover:bg-white transition-colors duration-300">
+                            Read My Story
+                        </button>
                     </div>
                 </div>
-            </div>
+            </section>
         </main>
     );
 }
